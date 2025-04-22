@@ -30,10 +30,12 @@ Before running make sure you have the following installed:
     Create a .env file in the project root directory.
 
     Add your Coursera login credentials and other environment variables:
-
+    
+    ```.env
     EMAIL=your_email@example.com
     PASSWORD=your_password
     CAPTCHA=your_captcha_solution  # String to search for to check if there's captcha
+    ```
 
 
 ## Usage
