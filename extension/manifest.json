@@ -1,0 +1,20 @@
+{
+  "manifest_version": 3,
+  "name": "Coursera Quiz Exporter",
+  "version": "1.0",
+  "description": "Export questions and answers from Coursera quiz feedback pages",
+  "permissions": ["downloads"],
+  "content_scripts": [
+    {
+      "matches": [
+        "*://www.coursera.org/learn/*/assignment-submission/*/view-feedback"
+      ],
+      "js": ["utils.js", "content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "host_permissions": ["*://www.coursera.org/*"],
+  "action": {
+    "default_title": "Coursera Quiz Exporter"
+  }
+}
