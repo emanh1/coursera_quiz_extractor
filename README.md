@@ -1,14 +1,14 @@
 # Coursera Quiz Extractor
 
-**Coursera Quiz Extractor** is a Python script that automates the extraction of quiz questions, answers, and images from Coursera courses. This tool uses **Selenium** for browser automation and **Pandas** for organizing extracted data into a CSV file.
+**Coursera Quiz Extractor** is a Jupyter notebook that automates the extraction of quiz questions, answers, and images from Coursera courses. This uses **Selenium** for browser automation and **Pandas** for organizing extracted data into a CSV file.
 
 ## Prerequisites
 
 Before running make sure you have the following installed:
 
 - **Python**
-- **Google Firefox** (for Selenium)
-- **Firefoxdriver** corresponding to your Chrome version (for Selenium)
+- **Firefox**
+- **Firefoxdriver** corresponding to your Firefox browser version
 
 ---
 
@@ -66,3 +66,7 @@ This project also includes a Firefox extension that allows you to export quiz qu
 
 
 ---
+
+
+#### TODO:
+Clean output of extension more
