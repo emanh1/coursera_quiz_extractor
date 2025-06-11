@@ -7,8 +7,8 @@
 Before running make sure you have the following installed:
 
 - **Python**
-- **Google Chrome** (for Selenium)
-- **Chromedriver** corresponding to your Chrome version (for Selenium)
+- **Google Firefox** (for Selenium)
+- **Firefoxdriver** corresponding to your Chrome version (for Selenium)
 
 ---
 
@@ -40,3 +40,29 @@ Before running make sure you have the following installed:
 
 ## Usage
 Run the notebook file. You may need to solve captcha to log in. When prompted, enter the course url and wait for it to finish.
+
+---
+
+## Browser Extension
+
+This project also includes a Firefox extension that allows you to export quiz questions and answers directly from Coursera quiz feedback pages.
+
+### Features
+- Adds an **Export Q&A** button to Coursera quiz feedback pages.
+- Extracts questions, answers, and image URLs from the page.
+- Downloads the extracted data as a CSV file.
+
+### Installation
+1 .Clone this repository or download the files
+2 .Go to about:debugging#/runtime/this-firefox
+3 .Click "Load Temporary Add-on"
+4 .Open any file of the repository
+
+
+### Usage
+- Navigate to a Coursera quiz feedback page (URL pattern: `https://www.coursera.org/learn/*/assignment-submission/*/view-feedback`).
+- Click the **Export Q&A** button that appears at the top right of the page.
+- A download prompt will pop up for the CSV file containing the questions, answers, and image URLs. Click download to get the file.
+
+
+---
