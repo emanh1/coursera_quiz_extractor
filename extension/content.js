@@ -5,6 +5,23 @@ function getCurrentTimestamp() {
   return now.toISOString().replace(/[:.-]/g, "_");
 }
 
+function cleanText(text) {
+  return text
+    .replace(/\s+/g, " ") // collapse multiple spaces
+    .replace(/\s*([,;:.!?])\s*/g, "$1 ") // remove spaces before/after punctuation, add single space after
+    .replace(/\s*([()\[\]{}])\s*/g, "$1") // remove spaces around brackets/parentheses
+    .replace(/\s*-\s*/g, " - ") // normalize dashes with spaces
+    .replace(/\s*\n\s*/g, "\n") // remove spaces around newlines
+    .replace(/\n{2,}/g, "\n") // collapse multiple newlines
+    .replace(/[“”]/g, '"') // normalize curly quotes
+    .replace(/[‘’]/g, "'") // normalize single curly quotes
+    .replace(/([,;:.!?]){2,}/g, "$1") // collapse repeated punctuation
+    .replace(/^\s+|\s+$/g, "") // trim leading/trailing whitespace
+    .replace(/^[,;:.!?]+|[,;:.!?]+$/g, "") // trim leading/trailing punctuation
+    .replace(/\s{2,}/g, " ") // collapse any remaining double spaces
+    .trim();
+}
+
 function getCleanText(el) {
   return el.textContent.replace(/\s+/g, " ").trim();
 }
@@ -14,6 +31,7 @@ function extractStructuredText(el) {
 
   function walk(node) {
     if (node.nodeType === Node.TEXT_NODE) {
+      if (isInVirtuallyHidden(node)) return;
       result += node.nodeValue;
     } else if (node.nodeType === Node.ELEMENT_NODE) {
       if (node.classList.contains("katex")) {
@@ -44,6 +62,20 @@ function extractStructuredText(el) {
     }
   }
 
+  function isInVirtuallyHidden(node) {
+    while (node && node !== el) {
+      if (
+        node.nodeType === Node.ELEMENT_NODE &&
+        node.tagName === "SPAN" &&
+        node.getAttribute("data-testid")?.trim() === "virtually-hidden"
+      ) {
+        return true;
+      }
+      node = node.parentNode;
+    }
+    return false;
+  }
+
   walk(el);
   return result.replace(/\s+/g, " ").trim();
 }
@@ -52,10 +84,28 @@ function katexToText(katexHtml) {
   let text = "";
   const spans = katexHtml.querySelectorAll("span");
 
-  spans.forEach(span => {
-    const ariaLabel = span.getAttribute("aria-label");
+  spans.forEach((span) => {
+    let ariaLabel = span.getAttribute("aria-label");
     const style = getComputedStyle(span);
     if (ariaLabel && style?.display !== "none") {
+      // Simplify aria-label descriptions to more readable math
+      ariaLabel = ariaLabel
+        .replace(/start superscript/g, "^(")
+        .replace(/end superscript/g, ")")
+        .replace(/start subscript/g, "_(")
+        .replace(/end subscript/g, ")")
+        .replace(/with, hat, on top/g, "^hat")
+        .replace(/left parenthesis/g, "(")
+        .replace(/right parenthesis/g, ")")
+        .replace(/vertical bar/g, "|")
+        .replace(/comma/g, ",")
+        .replace(/plus/g, "+")
+        .replace(/equals/g, "=")
+        .replace(/sigma/g, "σ")
+        .replace(/in/g, "∈")
+        .replace(/ /g, "")
+        .replace(/,+/g, ",")
+        .replace(/,\)/g, ")");
       text += ariaLabel;
     } else if (span.textContent && style?.display !== "none") {
       text += span.textContent;
@@ -75,7 +125,9 @@ function waitForNextItemAndAddButton() {
   ).singleNodeValue;
 
   if (!nextItemLabel) {
-    console.log("[Coursera Exporter] <span> with 'Next item' not found yet. Retrying in 2s...");
+    console.log(
+      "[Coursera Exporter] <span> with 'Next item' not found yet. Retrying in 2s..."
+    );
     setTimeout(waitForNextItemAndAddButton, 2000);
     return;
   }
@@ -113,7 +165,7 @@ function extractAndDownload() {
   const questionGroups = document.querySelectorAll('div[role="group"]');
 
   questionGroups.forEach((group, idx) => {
-    const question = extractStructuredText(group);
+    let question = extractStructuredText(group);
     let answer = "Not found";
     const images = [];
 
@@ -134,18 +186,31 @@ function extractAndDownload() {
       images.push(src);
     });
 
+    question = cleanText(question);
+    answer = cleanText(answer);
+
     rows.push([question, answer, images.join("; ")]);
   });
 
-  const filename = `coursera_quiz_export_${getCurrentTimestamp()}.csv`;
+  const pathParts = window.location.pathname.split("/");
+  const courseName = pathParts.includes("learn") ? pathParts[pathParts.indexOf("learn") + 1] : "unknown_course";
+  const quizName = pathParts.includes("assignment-submission") ? pathParts[pathParts.indexOf("assignment-submission") + 1] : "unknown_quiz";
+
+  const filename = `coursera_quiz_${courseName}_${quizName}_${getCurrentTimestamp()}.csv`;
   console.log(`[Coursera Exporter] Extracted ${rows.length - 1} question(s). Downloading as ${filename}`);
   downloadCSV(filename, rows);
 }
 
+
+
 function downloadCSV(filename, rows) {
-  const csvContent = rows.map(r =>
-    r.map(field => `"${String(field).replace(/"/g, '""')}"`).join(",")
-  ).join("\n");
+  const csvContent = rows
+    .map((r) =>
+      r
+        .map((field) => `"${String(field).replace(/"/g, '""')}"`)
+        .join(",")
+    )
+    .join("\n");
 
   const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
   const url = URL.createObjectURL(blob);
